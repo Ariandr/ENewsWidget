@@ -15,8 +15,8 @@ export function periodDays(anchor, view) {
 export function filterEvents(events, state, now = Date.now()) {
   const days = new Set(periodDays(state.anchor,state.view));
   return events.filter(e => days.has(dayKey(e.date,state.timezone)) &&
-    (state.currency === 'all' || e.country === state.currency || e.country === 'All') &&
-    (state.impact === 'all' || (state.impact === 'Medium+' ? ['Medium','High'].includes(e.impact) : e.impact === state.impact)) &&
+    state.currencies.includes(e.country) &&
+    state.impacts.includes(e.impact) &&
     e.title.toLowerCase().includes(state.search.toLowerCase()) &&
     (!state.upcoming || new Date(e.date).getTime() >= now)
   ).sort((a,b) => new Date(a.date)-new Date(b.date));

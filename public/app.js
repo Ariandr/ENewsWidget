@@ -1,33 +1,24 @@
 import {dayKey,addDays,periodDays,filterEvents} from './calendar.js';
 import {fetchCalendar,feedWarning,REFRESH_INTERVAL} from './feed.js';
+import {loadPreferences,savePreferences,preferencesURL,applyTheme,CURRENCIES,IMPACTS} from './preferences.js';
+import {mountMultiSelect} from './multiselect.js';
 const $ = id => document.getElementById(id);
-const params = new URLSearchParams(location.search);
-let saved = {};
-try { saved = JSON.parse(localStorage.getItem('calendar-preferences') || '{}'); } catch {}
-const state = {view:'week',timezone:'Europe/Warsaw',theme:'auto',currency:'all',impact:'all',search:'',upcoming:false};
-for (const key of Object.keys(state)) {
-  if (typeof state[key] === 'boolean') state[key] = params.has(key) ? params.get(key) === 'true' : saved?.[key] === true;
-  else state[key] = params.get(key) ?? saved?.[key] ?? state[key];
-}
-for (const id of ['timezone','theme','impact']) {
-  if (![...$(id).options].some(o => o.value === state[id])) state[id] = id === 'timezone' ? 'Europe/Warsaw' : id === 'theme' ? 'auto' : 'all';
-}
-if (!['day','week'].includes(state.view)) state.view = 'week';
-if (typeof state.search !== 'string') state.search = '';
+const state = loadPreferences();
 state.anchor = dayKey(new Date(),state.timezone);
 let data;
 let loading = false;
 let refreshFailed = false;
 let lastAttempt = 0;
-function persist() {
-  const {anchor,...preferences} = state;
-  try { localStorage.setItem('calendar-preferences',JSON.stringify(preferences)); } catch {}
-}
+const updateCurrencies = mountMultiSelect($('currencies'),{label:'Currencies',options:CURRENCIES,selected:state.currencies,onChange:values=>{state.currencies=values;render();}});
+const updateImpacts = mountMultiSelect($('impacts'),{label:'Impact',options:IMPACTS,selected:state.impacts,onChange:values=>{state.impacts=values;render();}});
 function applyControls() {
-  for (const key of ['timezone','theme','currency','impact','search']) $(key).value = state[key];
+  $('search').value = state.search;
   $('upcoming').checked = state.upcoming;
-  if (state.theme === 'auto') delete document.documentElement.dataset.theme;
-  else document.documentElement.dataset.theme = state.theme;
+  updateCurrencies(state.currencies); updateImpacts(state.impacts);
+  applyTheme(state.theme);
+  for (const [id,key] of [['header','showHeader'],['navigation','showNavigation'],['filters','showFilters'],['summary','showSummary'],['footer','showFooter']]) $(id).hidden = !state[key];
+  document.querySelector('.calendar').classList.toggle('compact',state.compact);
+  $('settings-link').href = preferencesURL('./settings.html',state);
   document.querySelectorAll('[data-view]').forEach(b => b.setAttribute('aria-pressed',String(b.dataset.view === state.view)));
 }
 const dateLabel = (key, options) => new Intl.DateTimeFormat('en-GB',{timeZone:'UTC',...options}).format(new Date(`${key}T12:00:00Z`));
@@ -35,7 +26,7 @@ function cell(tag,text,className) {
   const el = document.createElement(tag); el.textContent = text; if(className) el.className = className; return el;
 }
 function render() {
-  applyControls(); persist();
+  applyControls(); savePreferences(state);
   const days = periodDays(state.anchor,state.view);
   $('period').textContent = state.view === 'day' ? dateLabel(days[0],{weekday:'short',day:'numeric',month:'short',year:'numeric'}) : `${dateLabel(days[0],{day:'numeric',month:'short'})} – ${dateLabel(days[6],{day:'numeric',month:'short',year:'numeric'})}`;
   if (!data) return;
@@ -65,15 +56,16 @@ function render() {
   $('empty').hidden = visible.length !== 0;
   const available = data.events.map(e => dayKey(e.date,state.timezone)).sort();
   const outside = !available.length || days.at(-1) < available[0] || days[0] > available.at(-1);
-  $('empty').textContent = outside ? 'No data available for this period. The free feed contains the current week only. Use Today to return.' : 'No matching events. Try another day or reset your filters.';
+  $('empty').textContent = outside ? 'No data available for this period.' : 'No matching events.';
   const warning = feedWarning(data,refreshFailed,now);
   const updated = new Intl.DateTimeFormat('en-GB',{timeZone:state.timezone,day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}).format(new Date(data.updatedAt));
-  $('updated').textContent = `${warning ? `${warning} · ` : ''}PipAtlas updated ${updated} · Checks every 5 min while visible`;
+  $('updated').textContent = `Updated ${updated}`;
+  $('warning').hidden = !warning;
+  $('warning').textContent = warning;
 }
-for (const key of ['timezone','theme','currency','impact','search','upcoming']) {
+for (const key of ['search','upcoming']) {
   $(key).addEventListener(key === 'search' ? 'input' : 'change',() => {
     state[key] = key === 'upcoming' ? $(key).checked : $(key).value;
-    if (key === 'timezone') state.anchor = dayKey(new Date(),state.timezone);
     render();
   });
 }
@@ -81,13 +73,7 @@ document.querySelectorAll('[data-view]').forEach(button => button.addEventListen
 $('prev').onclick = () => {state.anchor = addDays(state.anchor,state.view === 'week' ? -7 : -1);render();};
 $('next').onclick = () => {state.anchor = addDays(state.anchor,state.view === 'week' ? 7 : 1);render();};
 $('today').onclick = () => {state.anchor = dayKey(new Date(),state.timezone);render();};
-$('reset').onclick = () => {Object.assign(state,{currency:'all',impact:'all',search:'',upcoming:false});render();};
-$('copy').onclick = async () => {
-  const url = new URL(location.href);url.search = '';url.hash = '';
-  for(const key of ['view','timezone','theme','currency','impact','search','upcoming']) url.searchParams.set(key,String(state[key]));
-  try {await navigator.clipboard.writeText(url.href);$('copy-status').textContent = 'Copied · paste into Notion’s /embed block';}
-  catch {$('copy-status').textContent = 'Copy this address:';const input = document.createElement('input');input.value = url.href;input.readOnly = true;$('copy-status').append(input);input.select();}
-};
+$('reset').onclick = () => {Object.assign(state,{currencies:[...CURRENCIES],impacts:[...IMPACTS],search:'',upcoming:false});render();};
 async function load() {
   if (loading) return;
   loading = true;
@@ -95,15 +81,12 @@ async function load() {
   try {
     data = await fetchCalendar();
     refreshFailed = false;
-    const currencies = [...new Set(data.events.map(e=>e.country))].filter(c=>c !== 'All').sort();
-    $('currency').replaceChildren(new Option('All currencies','all'),...currencies.map(c=>new Option(c,c)));
-    if (!currencies.includes(state.currency)) state.currency = 'all';
     render();
   } catch (error) {
     refreshFailed = true;
     if (data) {render();return;}
     $('count').textContent = 'Calendar unavailable';$('updated').textContent = 'Could not load calendar data';$('empty').hidden = false;
-    $('empty').textContent = 'PipAtlas could not be reached. Reload to retry, or open the source calendar below. Automatic retries run every five minutes while visible.';
+    $('empty').textContent = 'Calendar unavailable. Reload to retry.';
     console.error(error);
   } finally {
     loading = false;

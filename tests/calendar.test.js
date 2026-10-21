@@ -16,8 +16,12 @@ test('filters combine currency, impact, search and upcoming time',()=>{
     {title:'GDP',country:'USD',impact:'Medium',date:'2026-10-21T17:00:00Z'},
     {title:'Meetings',country:'All',impact:'Medium',date:'2026-10-21T18:00:00Z'}
   ];
-  const state = {anchor:'2026-10-21',view:'day',timezone:'Europe/Warsaw',currency:'USD',impact:'Medium+',search:'gDp',upcoming:true};
+  const state = {anchor:'2026-10-21',view:'day',timezone:'Europe/Warsaw',currencies:['USD'],impacts:['Medium','High'],search:'gDp',upcoming:true};
   assert.deepEqual(filterEvents(events,state,Date.parse('2026-10-21T15:30:00Z')),[events[3]]);
-  assert.deepEqual(filterEvents(events,{...state,search:''},Date.parse('2026-10-21T15:30:00Z')),[events[3],events[4]]);
+  assert.deepEqual(filterEvents(events,{...state,search:''},Date.parse('2026-10-21T15:30:00Z')),[events[3]]);
+  assert.deepEqual(filterEvents(events,{...state,search:'',currencies:['USD','All']},Date.parse('2026-10-21T15:30:00Z')),[events[3],events[4]]);
+  assert.deepEqual(filterEvents(events,{...state,currencies:[]}),[]);
+  assert.deepEqual(filterEvents(events,{...state,impacts:[]}),[]);
+  assert.deepEqual(filterEvents(events,{...state,currencies:['USD','EUR'],impacts:['High','Low'],upcoming:false}),events.slice(0,3));
   assert.deepEqual(filterEvents(events,{...state,anchor:'2026-10-22'}),[]);
 });

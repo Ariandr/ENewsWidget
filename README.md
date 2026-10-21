@@ -1,18 +1,24 @@
 # Notion economic calendar
 
-A small Forex Factory inspired calendar for GitHub Pages and Notion embeds. This branch fetches calendar data **directly from PipAtlas in the browser**. Plain HTML, CSS and JavaScript; no runtime dependencies, API key, Worker, or scheduled data deployments.
+A compact Forex Factory inspired calendar for GitHub Pages and Notion embeds. It fetches calendar data **directly from PipAtlas in the browser**. Plain HTML, CSS and JavaScript; no runtime dependencies, API key, Worker, or scheduled data deployments.
 
-Includes day/week views (Sunday–Saturday), period navigation, currency and impact filters, event search, upcoming-only mode, time-zone selection, automatic/light/dark themes, and shareable embed settings. Defaults to Europe/Warsaw, including daylight-saving changes. Events marked `All` remain visible under individual currency filters.
+Includes day/week views (Sunday–Saturday), period navigation, independent currency and impact checkboxes, event search, upcoming-only mode, time-zone selection, automatic/light/dark themes, and shareable embed settings. Defaults to Europe/Warsaw, including daylight-saving changes. **Global events** is an independent currency checkbox for events marked `All`. Unchecking every currency or every impact shows no events; Reset selects everything again.
+
+## Compact layout and settings
+
+Open the small **gear button** at the bottom-right of the widget, or visit `settings.html`. The settings page has independent switches for the title header, date navigation, filter bar, summary, footer, and compact spacing. The default hides the title, summary and footer and uses compact spacing. Disable navigation and filters too for a table-only widget. The gear stays available in every layout.
+
+Theme, time zone, view and default filters can also be configured on the settings page. **Open calendar** applies them; **Copy embed link** includes every setting in the URL, so it works even when Notion blocks browser storage. Browser storage also saves preferences when available. There is no fine print under the table. If the optional footer is enabled it shows only an update timestamp and source link. Actual data failures or stale-data warnings still appear when needed.
 
 ## Publish on GitHub Pages
 
-1. Merge or copy this branch's files into `main` in a **public GitHub repository**. GitHub Free supports Pages for public repositories. The existing `main` branch retains the original export-based version until you merge.
+1. Put `main` in a **public GitHub repository**. GitHub Free supports Pages for public repositories.
 2. In the repository, open **Settings → Pages → Build and deployment → Source → GitHub Actions**.
-3. Open **Actions → Deploy calendar to Pages → Run workflow** (or push a change to `main`). The feature branch does not automatically deploy on push.
+3. Open **Actions → Deploy calendar to Pages → Run workflow** (or push a change to `main`).
 4. After the workflow succeeds, open the URL shown by the deployment, normally `https://YOUR-USERNAME.github.io/YOUR-REPOSITORY/`.
-5. Choose your widget filters and click **Copy embed link**. In Notion, type `/embed`, paste that URL, and resize the block. A wide block works best for the table.
+5. Choose your widget filters, open the gear, and click **Copy embed link**. In Notion, type `/embed`, paste that URL, and resize the block. A wide block works best for the table.
 
-Example settings: `?view=day&currency=USD&impact=Medium%2B&timezone=Europe%2FWarsaw&theme=dark`. Copy embed link includes the current settings, but deliberately not the selected date, so the calendar opens on the current day/week. URL settings override locally saved preferences. Browser storage is optional and safely ignored if blocked in an embed.
+Example settings: `?view=day&currencies=USD,EUR&impacts=High,Low&timezone=Europe%2FWarsaw&theme=dark&showHeader=false&showFooter=false`. Empty selections use `currencies=` or `impacts=`. Old `currency=USD` and `impact=Medium%2B` links are migrated to independent selections. Copy embed link includes current settings, but deliberately not the selected date, so the calendar opens on the current day/week. URL settings override locally saved preferences.
 
 ## Data and refresh
 
@@ -27,7 +33,7 @@ GitHub Actions only tests and deploys the static `public` folder after code push
 - The footer shows PipAtlas's `updated` timestamp, not the browser download time. Its `stale` flag is surfaced, and timestamps older than 30 minutes get a warning.
 - On a network, HTTP, timeout, or validation error, the last successfully loaded data remains in memory with a persistent failure warning. Without a prior success, an unavailable message appears. Reloading clears that in-memory fallback. The next visible polling cycle retries; there is no hidden fallback to the old Forex Factory snapshot.
 - PipAtlas documents roughly 20 requests per minute per IP, shared across its API routes. Multiple embeds and other clients on the same IP share this allowance.
-- PipAtlas is a third-party service for personal, educational and non-commercial use, with no SLA. Data can be delayed and its schema or availability can change. This widget links to both PipAtlas and Forex Factory and is independent of both.
+- PipAtlas is a third-party service for personal, educational and non-commercial use, with no SLA. Data can be delayed and its schema or availability can change. The optional footer links to PipAtlas. This widget is independent of PipAtlas and Forex Factory.
 
 ## Local preview
 
@@ -38,14 +44,14 @@ npm test
 npm run dev
 ```
 
-Open `http://127.0.0.1:4173`. Internet access to PipAtlas is required for the initial load. Tests are offline and cover date conversion, filters, API field mapping, invalid responses, request failures, and stale-data warnings.
+Open `http://127.0.0.1:4173` (settings: `http://127.0.0.1:4173/settings.html`). Use the HTTP server, not a `file://` URL: browsers restrict JavaScript modules opened directly from disk. Internet access to PipAtlas is required for the initial load. Tests are offline and cover dates, independent selections, settings URL round trips, legacy preferences, API mapping, invalid responses, request failures, and stale-data warnings.
 
 ## Branches
 
-- `main`: original Forex Factory export downloaded by scheduled GitHub Actions.
-- `codex/pipatlas`: browser requests to PipAtlas; no scheduled deployments.
+- `main`: PipAtlas with compact layout, checkbox filters and settings page.
+- `codex/pipatlas`: earlier PipAtlas version, retained for comparison.
 
-Switch with `git switch main` or `git switch codex/pipatlas` after saving any local changes. A one-time deployment is needed to switch an already hosted widget to this implementation.
+The old export-based implementation is no longer on `main`; it remains recoverable in Git history. A one-time deployment is needed to update an already hosted widget to this implementation.
 
 ## Hosting references
 

@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <title>Calendar settings</title>
+  <link rel="stylesheet" href="./style.css">
+  <script type="module" src="./settings.js"></script>
+</head>
+<body>
+<main class="settings-page">
+  <div class="settings-heading"><h1>Widget settings</h1><a id="back" href="./index.html">Done ↗</a></div>
+  <p class="settings-intro">Choose what appears in your calendar.</p>
+  <form id="preferences">
+    <fieldset class="settings-group"><legend>Layout</legend>
+      <label class="setting-row"><span>Title header<small>Calendar name and subtitle</small></span><input type="checkbox" name="showHeader"></label>
+      <label class="setting-row"><span>Date navigation<small>Date, arrows and day/week switch</small></span><input type="checkbox" name="showNavigation"></label>
+      <label class="setting-row"><span>Filter bar<small>Search, currencies and impact</small></span><input type="checkbox" name="showFilters"></label>
+      <label class="setting-row"><span>Summary<small>Event count, time zone and legend</small></span><input type="checkbox" name="showSummary"></label>
+      <label class="setting-row"><span>Footer<small>Last update and source link</small></span><input type="checkbox" name="showFooter"></label>
+      <label class="setting-row"><span>Compact spacing<small>Smaller rows and margins</small></span><input type="checkbox" name="compact"></label>
+    </fieldset>
+    <fieldset class="settings-group"><legend>Display</legend>
+      <label class="setting-row">Theme<select name="theme"><option value="auto">Automatic</option><option value="light">Light</option><option value="dark">Dark</option></select></label>
+      <label class="setting-row">Time zone<select name="timezone"><option value="Europe/Warsaw">Warsaw</option><option value="UTC">UTC</option><option value="Europe/London">London</option><option value="America/New_York">New York</option><option value="Asia/Tokyo">Tokyo</option><option value="Australia/Sydney">Sydney</option></select></label>
+      <label class="setting-row">View<select name="view"><option value="week">Week</option><option value="day">Day</option></select></label>
+    </fieldset>
+    <fieldset class="settings-group"><legend>Event filters</legend>
+      <div class="settings-filters"><details id="currencies" class="multi-select"></details><details id="impacts" class="multi-select"></details></div>
+      <label class="setting-row">Search<input type="search" name="search" placeholder="All events"></label>
+      <label class="setting-row">Upcoming only<input type="checkbox" name="upcoming"></label>
+    </fieldset>
+  </form>
+  <div class="settings-buttons"><a id="preview" class="primary-button" href="./index.html">Open calendar</a><button id="copy">Copy embed link</button></div>
+  <p id="saved" role="status" class="settings-intro"></p>
+  <label id="link-fallback" hidden>Embed URL<input id="embed-url" type="text" readonly></label>
+  <p class="settings-intro">The settings button stays available even when all sections are hidden. Your embed link includes these settings.</p>
+</main>
+</body>
+</html>

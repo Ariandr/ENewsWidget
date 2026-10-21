@@ -10,25 +10,29 @@
 </head>
 <body>
 <main class="calendar">
-  <header>
+  <a id="settings-link" class="settings-launch" href="./settings.html" aria-label="Widget settings" title="Widget settings">⚙</a>
+  <header id="header" hidden>
     <div class="heading"><span class="mark" aria-hidden="true">▥</span><div><h1>Economic calendar</h1><p>The week ahead, at a glance.</p></div></div>
-    <div class="settings"><label class="sr-only" for="timezone">Time zone</label><select id="timezone"><option value="Europe/Warsaw">Warsaw</option><option value="UTC">UTC</option><option value="Europe/London">London</option><option value="America/New_York">New York</option><option value="Asia/Tokyo">Tokyo</option><option value="Australia/Sydney">Sydney</option></select><label class="sr-only" for="theme">Theme</label><select id="theme"><option value="auto">Auto theme</option><option value="light">Light</option><option value="dark">Dark</option></select></div>
   </header>
-  <section class="toolbar" aria-label="Calendar navigation">
+  <section id="navigation" class="toolbar" aria-label="Calendar navigation">
     <div class="navigation"><button id="prev" aria-label="Previous period">‹</button><button id="next" aria-label="Next period">›</button><h2 id="period">Loading calendar…</h2><button id="today">Today</button></div>
     <div class="views" aria-label="Calendar view"><button data-view="day" aria-pressed="false">Day</button><button data-view="week" aria-pressed="true">Week</button></div>
   </section>
-  <section class="filters" aria-label="Event filters">
+  <section id="filters" class="filters" aria-label="Event filters">
     <label class="search"><span aria-hidden="true">⌕</span><input id="search" type="search" placeholder="Search events" aria-label="Search events"></label>
-    <label><span class="sr-only">Currency</span><select id="currency"><option value="all">All currencies</option></select></label>
-    <label><span class="sr-only">Impact</span><select id="impact"><option value="all">All impact levels</option><option value="High">High only</option><option value="Medium+">Medium & high</option><option value="Medium">Medium only</option><option value="Low">Low only</option><option value="Holiday">Holiday</option></select></label>
+    <details id="currencies" class="multi-select"></details>
+    <details id="impacts" class="multi-select"></details>
     <label class="upcoming"><input id="upcoming" type="checkbox"> Upcoming only</label><button id="reset" class="text-button">Reset</button>
   </section>
-  <div class="summary"><span id="count" role="status">Fetching events…</span><span class="legend"><i class="dot High"></i>High <i class="dot Medium"></i>Medium <i class="dot Low"></i>Low</span></div>
-  <div class="table-wrap" tabindex="0" aria-label="Economic events"><table><thead><tr><th scope="col">Time</th><th scope="col">Currency</th><th scope="col">Impact</th><th scope="col" class="event-col">Event</th><th scope="col" class="numeric">Actual</th><th scope="col" class="numeric">Forecast</th><th scope="col" class="numeric">Previous</th></tr></thead><tbody id="events"></tbody></table><div id="empty" hidden></div></div>
-  <footer><span id="updated" role="status">Connecting to PipAtlas…</span><a href="https://pipatlas.com/api-docs" target="_blank" rel="noopener noreferrer">Data via PipAtlas ↗</a><a href="https://www.forexfactory.com/calendar" target="_blank" rel="noopener noreferrer">Forex Factory ↗</a></footer>
-  <p class="note">Current-week calendar via PipAtlas · Times and results may be delayed. Actual values appear when provided.</p>
-  <div class="embed-tools"><button id="copy" class="text-button">Copy embed link</button><span id="copy-status" role="status"></span></div>
+  <div id="summary" class="summary" hidden><span id="count" role="status">Fetching events…</span><span class="legend"><i class="dot High"></i>High <i class="dot Medium"></i>Medium <i class="dot Low"></i>Low</span></div>
+  <p id="warning" class="warning" role="status" hidden></p>
+  <div class="table-wrap" tabindex="0" aria-label="Economic events"><table><thead><tr><th scope="col">Time</th><th scope="col">Currency</th><th scope="col">Impact</th><th scope="col" class="event-col">Event</th><th scope="col" class="numeric">Actual</th><th scope="col" class="numeric">Forecast</th><th scope="col" class="numeric">Previous</th></tr></thead><tbody id="events"></tbody></table><div id="empty" role="status">Loading events…</div></div>
+  <footer id="footer" hidden><span id="updated" role="status"></span><a href="https://pipatlas.com/api-docs" target="_blank" rel="noopener noreferrer">PipAtlas ↗</a></footer>
 </main>
+<script>
+  if (location.protocol === 'file:') {
+    document.getElementById('empty').textContent = 'For local preview, run npm run dev and open http://127.0.0.1:4173/.';
+  }
+</script>
 </body>
 </html>
