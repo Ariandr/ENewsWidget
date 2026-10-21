@@ -6,7 +6,7 @@ Includes day/week views (Sunday–Saturday), period navigation, independent curr
 
 ## Compact layout and settings
 
-Open the small **gear button** at the bottom-right of the widget, or visit `settings.html`. The settings page has independent switches for the title header, date navigation, filter bar, summary, footer, and compact spacing. The default hides the title, summary and footer and uses compact spacing. Disable navigation and filters too for a table-only widget. The gear stays available in every layout.
+Open the **Settings** button at the top-right of the widget, or visit `settings.html`. The settings page has independent switches for the title header, date navigation, filter bar, summary, footer, and compact spacing. The default hides the title, summary and footer and uses compact spacing. Disable navigation and filters too for a table-only widget. The Settings button stays available in every layout.
 
 Theme, time zone, view and default filters can also be configured on the settings page. **Open calendar** applies them; **Copy embed link** includes every setting in the URL, so it works even when Notion blocks browser storage. Browser storage also saves preferences when available. There is no fine print under the table. If the optional footer is enabled it shows only an update timestamp and source link. Actual data failures or stale-data warnings still appear when needed.
 
@@ -16,7 +16,7 @@ Theme, time zone, view and default filters can also be configured on the setting
 2. In the repository, open **Settings → Pages → Build and deployment → Source → GitHub Actions**.
 3. Open **Actions → Deploy calendar to Pages → Run workflow** (or push a change to `main`).
 4. After the workflow succeeds, open the URL shown by the deployment, normally `https://YOUR-USERNAME.github.io/YOUR-REPOSITORY/`.
-5. Choose your widget filters, open the gear, and click **Copy embed link**. In Notion, type `/embed`, paste that URL, and resize the block. A wide block works best for the table.
+5. Choose your widget filters, open Settings, and click **Copy embed link**. In Notion, type `/embed`, paste that URL, and resize the block. A wide block works best for the table.
 
 Example settings: `?view=day&currencies=USD,EUR&impacts=High,Low&timezone=Europe%2FWarsaw&theme=dark&showHeader=false&showFooter=false`. Empty selections use `currencies=` or `impacts=`. Old `currency=USD` and `impact=Medium%2B` links are migrated to independent selections. Copy embed link includes current settings, but deliberately not the selected date, so the calendar opens on the current day/week. URL settings override locally saved preferences.
 

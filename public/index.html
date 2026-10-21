@@ -10,14 +10,16 @@
 </head>
 <body>
 <main class="calendar">
-  <a id="settings-link" class="settings-launch" href="./settings.html" aria-label="Widget settings" title="Widget settings">⚙</a>
   <header id="header" hidden>
     <div class="heading"><span class="mark" aria-hidden="true">▥</span><div><h1>Economic calendar</h1><p>The week ahead, at a glance.</p></div></div>
   </header>
+  <div class="topbar">
   <section id="navigation" class="toolbar" aria-label="Calendar navigation">
     <div class="navigation"><button id="prev" aria-label="Previous period">‹</button><button id="next" aria-label="Next period">›</button><h2 id="period">Loading calendar…</h2><button id="today">Today</button></div>
     <div class="views" aria-label="Calendar view"><button data-view="day" aria-pressed="false">Day</button><button data-view="week" aria-pressed="true">Week</button></div>
   </section>
+  <a id="settings-link" class="settings-launch" href="./settings.html" aria-label="Widget settings" title="Widget settings"><span aria-hidden="true">⚙</span> Settings</a>
+  </div>
   <section id="filters" class="filters" aria-label="Event filters">
     <label class="search"><span aria-hidden="true">⌕</span><input id="search" type="search" placeholder="Search events" aria-label="Search events"></label>
     <details id="currencies" class="multi-select"></details>
