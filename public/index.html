@@ -25,9 +25,9 @@
     <label class="upcoming"><input id="upcoming" type="checkbox"> Upcoming only</label><button id="reset" class="text-button">Reset</button>
   </section>
   <div class="summary"><span id="count" role="status">Fetching events…</span><span class="legend"><i class="dot High"></i>High <i class="dot Medium"></i>Medium <i class="dot Low"></i>Low</span></div>
-  <div class="table-wrap" tabindex="0" aria-label="Economic events"><table><thead><tr><th scope="col">Time</th><th scope="col">Currency</th><th scope="col">Impact</th><th scope="col" class="event-col">Event</th><th scope="col" class="numeric">Forecast</th><th scope="col" class="numeric">Previous</th></tr></thead><tbody id="events"></tbody></table><div id="empty" hidden></div></div>
-  <footer><span id="updated" role="status">Loading data…</span><a href="https://www.forexfactory.com/calendar" target="_blank" rel="noopener noreferrer">Forex Factory ↗</a></footer>
-  <p class="note">Weekly export · Times are approximate. Actual release results are not included.</p>
+  <div class="table-wrap" tabindex="0" aria-label="Economic events"><table><thead><tr><th scope="col">Time</th><th scope="col">Currency</th><th scope="col">Impact</th><th scope="col" class="event-col">Event</th><th scope="col" class="numeric">Actual</th><th scope="col" class="numeric">Forecast</th><th scope="col" class="numeric">Previous</th></tr></thead><tbody id="events"></tbody></table><div id="empty" hidden></div></div>
+  <footer><span id="updated" role="status">Connecting to PipAtlas…</span><a href="https://pipatlas.com/api-docs" target="_blank" rel="noopener noreferrer">Data via PipAtlas ↗</a><a href="https://www.forexfactory.com/calendar" target="_blank" rel="noopener noreferrer">Forex Factory ↗</a></footer>
+  <p class="note">Current-week calendar via PipAtlas · Times and results may be delayed. Actual values appear when provided.</p>
   <div class="embed-tools"><button id="copy" class="text-button">Copy embed link</button><span id="copy-status" role="status"></span></div>
 </main>
 </body>

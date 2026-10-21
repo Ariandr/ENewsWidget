@@ -1,7 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {dayKey,addDays,periodDays,filterEvents} from '../public/calendar.js';
-import {normalizeFeed} from '../scripts/refresh-calendar.mjs';
 
 test('Warsaw date conversion handles midnight and the DST transition',()=>{
   assert.equal(dayKey('2026-10-24T22:30:00Z','Europe/Warsaw'),'2026-10-25');
@@ -21,10 +20,4 @@ test('filters combine currency, impact, search and upcoming time',()=>{
   assert.deepEqual(filterEvents(events,state,Date.parse('2026-10-21T15:30:00Z')),[events[3]]);
   assert.deepEqual(filterEvents(events,{...state,search:''},Date.parse('2026-10-21T15:30:00Z')),[events[3],events[4]]);
   assert.deepEqual(filterEvents(events,{...state,anchor:'2026-10-22'}),[]);
-});
-test('bad upstream data cannot overwrite a valid calendar',()=>{
-  assert.throws(()=>normalizeFeed([]));
-  assert.throws(()=>normalizeFeed([{title:'GDP',country:'USD',date:'not a date',impact:'High'}]));
-  assert.throws(()=>normalizeFeed([{title:'GDP',country:'USD',date:'2026-10-21T12:00:00',impact:'High'}]));
-  assert.deepEqual(normalizeFeed([{title:'GDP',country:'USD',date:'2026-10-21T12:00:00Z',impact:'High'}])[0],{title:'GDP',country:'USD',date:'2026-10-21T12:00:00Z',impact:'High',forecast:'',previous:''});
 });

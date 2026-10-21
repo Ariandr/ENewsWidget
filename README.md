@@ -1,14 +1,14 @@
 # Notion economic calendar
 
-A small Forex Factory inspired calendar for GitHub Pages and Notion embeds. Plain HTML, CSS and JavaScript; no runtime dependencies, API key, paid hosting, or backend server.
+A small Forex Factory inspired calendar for GitHub Pages and Notion embeds. This branch fetches calendar data **directly from PipAtlas in the browser**. Plain HTML, CSS and JavaScript; no runtime dependencies, API key, Worker, or scheduled data deployments.
 
 Includes day/week views (Sunday–Saturday), period navigation, currency and impact filters, event search, upcoming-only mode, time-zone selection, automatic/light/dark themes, and shareable embed settings. Defaults to Europe/Warsaw, including daylight-saving changes. Events marked `All` remain visible under individual currency filters.
 
 ## Publish on GitHub Pages
 
-1. Put these files in a **public GitHub repository**, on its `main` branch. GitHub Free supports Pages for public repositories.
+1. Merge or copy this branch's files into `main` in a **public GitHub repository**. GitHub Free supports Pages for public repositories. The existing `main` branch retains the original export-based version until you merge.
 2. In the repository, open **Settings → Pages → Build and deployment → Source → GitHub Actions**.
-3. Open **Actions → Refresh calendar and deploy Pages → Run workflow** (or push a change to `main`).
+3. Open **Actions → Deploy calendar to Pages → Run workflow** (or push a change to `main`). The feature branch does not automatically deploy on push.
 4. After the workflow succeeds, open the URL shown by the deployment, normally `https://YOUR-USERNAME.github.io/YOUR-REPOSITORY/`.
 5. Choose your widget filters and click **Copy embed link**. In Notion, type `/embed`, paste that URL, and resize the block. A wide block works best for the table.
 
@@ -16,15 +16,18 @@ Example settings: `?view=day&currency=USD&impact=Medium%2B&timezone=Europe%2FWar
 
 ## Data and refresh
 
-The widget uses the JSON weekly export linked from [Forex Factory's calendar](https://www.forexfactory.com/calendar): `https://nfs.faireconomy.media/ff_calendar_thisweek.json`.
+The widget calls [PipAtlas's public calendar API](https://pipatlas.com/api-docs) at `https://pipatlas.com/api/calendar`. PipAtlas relays Forex Factory calendar data and enables cross-origin browser requests. No key or credentials are sent.
 
-GitHub Actions fetches and validates the export at 00:23, 06:23, 12:23 and 18:23 UTC, then deploys the static `public` folder. This avoids browser cross-origin restrictions. The browser reloads the hosted JSON every five minutes; this does not fetch directly from Forex Factory. The refresh timestamp is the download time, not the source's release/update time.
+Data loads when the widget is first visible, then approximately every five minutes while visible (the timer checks every 30 seconds). Returning to the widget after five minutes triggers a refresh immediately. Hidden tabs pause requests. Requests time out after 20 seconds and never overlap. Background browser throttling can delay timers. PipAtlas caches responses for about five minutes, so repeated requests do not imply new data.
+
+GitHub Actions only tests and deploys the static `public` folder after code pushes to `main` or a manual run. There is **no cron schedule, data-generation step, or bundled calendar snapshot** on this branch. Fresh data never requires a GitHub redeploy.
 
 - The verified feed contains **this week only**. Navigation outside available data shows an explicit unavailable state. No history or next-week feed is promised.
-- It includes forecasts and previous values, **not actual release results**. This is a periodically refreshed planning calendar, not a real-time trading feed.
-- A failed or invalid feed stops deployment, preserving the existing hosted version. The widget flags data fetched more than 12 hours ago as potentially stale.
-- GitHub scheduled runs can be delayed, and schedules in inactive public repositories may be disabled. Check Actions if the timestamp stops advancing.
-- Data availability and reuse remain subject to the provider's terms. The widget is independent of Forex Factory and links to the original calendar. Use a licensed API if you need guaranteed service, redistribution rights, historical coverage, or actual results.
+- Forecast and previous values are included. The Actual column displays a value **only when PipAtlas supplies one**; otherwise it shows a dash. The verified response did not contain actuals. This is not a guaranteed real-time release feed.
+- The footer shows PipAtlas's `updated` timestamp, not the browser download time. Its `stale` flag is surfaced, and timestamps older than 30 minutes get a warning.
+- On a network, HTTP, timeout, or validation error, the last successfully loaded data remains in memory with a persistent failure warning. Without a prior success, an unavailable message appears. Reloading clears that in-memory fallback. The next visible polling cycle retries; there is no hidden fallback to the old Forex Factory snapshot.
+- PipAtlas documents roughly 20 requests per minute per IP, shared across its API routes. Multiple embeds and other clients on the same IP share this allowance.
+- PipAtlas is a third-party service for personal, educational and non-commercial use, with no SLA. Data can be delayed and its schema or availability can change. This widget links to both PipAtlas and Forex Factory and is independent of both.
 
 ## Local preview
 
@@ -32,11 +35,17 @@ Requires Node.js 22+ and Python 3. No `npm install` is needed.
 
 ```sh
 npm test
-npm run refresh
 npm run dev
 ```
 
-Open `http://127.0.0.1:4173`. A downloaded snapshot is included so local preview works without refreshing first. Its timestamp is shown honestly and it will become stale; publishing always fetches fresh data. To import an already-downloaded original feed: `node scripts/refresh-calendar.mjs --input /absolute/path/export.json`.
+Open `http://127.0.0.1:4173`. Internet access to PipAtlas is required for the initial load. Tests are offline and cover date conversion, filters, API field mapping, invalid responses, request failures, and stale-data warnings.
+
+## Branches
+
+- `main`: original Forex Factory export downloaded by scheduled GitHub Actions.
+- `codex/pipatlas`: browser requests to PipAtlas; no scheduled deployments.
+
+Switch with `git switch main` or `git switch codex/pipatlas` after saving any local changes. A one-time deployment is needed to switch an already hosted widget to this implementation.
 
 ## Hosting references
 

@@ -1,4 +1,5 @@
 import {dayKey,addDays,periodDays,filterEvents} from './calendar.js';
+import {fetchCalendar,feedWarning,REFRESH_INTERVAL} from './feed.js';
 const $ = id => document.getElementById(id);
 const params = new URLSearchParams(location.search);
 let saved = {};
@@ -15,6 +16,9 @@ if (!['day','week'].includes(state.view)) state.view = 'week';
 if (typeof state.search !== 'string') state.search = '';
 state.anchor = dayKey(new Date(),state.timezone);
 let data;
+let loading = false;
+let refreshFailed = false;
+let lastAttempt = 0;
 function persist() {
   const {anchor,...preferences} = state;
   try { localStorage.setItem('calendar-preferences',JSON.stringify(preferences)); } catch {}
@@ -44,7 +48,7 @@ function render() {
     const entries = visible.filter(e => dayKey(e.date,state.timezone) === day);
     if (!entries.length) continue;
     const row = document.createElement('tr'); row.className = `day-row${day === today ? ' today' : ''}`;
-    const heading = cell('th',dateLabel(day,{weekday:'long',day:'numeric',month:'long'})); heading.colSpan = 6; heading.scope = 'rowgroup';
+    const heading = cell('th',dateLabel(day,{weekday:'long',day:'numeric',month:'long'})); heading.colSpan = 7; heading.scope = 'rowgroup';
     if (day === today) heading.append(cell('span','Today'));
     row.append(heading); fragment.append(row);
     for (const event of entries) {
@@ -54,7 +58,7 @@ function render() {
       const currency = cell('td',''); currency.append(cell('span',event.country,'currency')); tr.append(currency);
       const impact = cell('td',''), label = cell('span','','impact-label');
       label.append(cell('i','',`dot ${['High','Medium','Low'].includes(event.impact) ? event.impact : ''}`),document.createTextNode(event.impact)); impact.append(label); tr.append(impact);
-      tr.append(cell('td',event.title,'event-title'),cell('td',event.forecast || '—','numeric'),cell('td',event.previous || '—','numeric')); fragment.append(tr);
+      tr.append(cell('td',event.title,'event-title'),cell('td',event.actual || '—','numeric'),cell('td',event.forecast || '—','numeric'),cell('td',event.previous || '—','numeric')); fragment.append(tr);
     }
   }
   $('events').replaceChildren(fragment);
@@ -62,9 +66,9 @@ function render() {
   const available = data.events.map(e => dayKey(e.date,state.timezone)).sort();
   const outside = !available.length || days.at(-1) < available[0] || days[0] > available.at(-1);
   $('empty').textContent = outside ? 'No data available for this period. The free feed contains the current week only. Use Today to return.' : 'No matching events. Try another day or reset your filters.';
-  const ageHours = (now-new Date(data.fetchedAt).getTime())/36e5;
-  const updated = new Intl.DateTimeFormat('en-GB',{timeZone:state.timezone,day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}).format(new Date(data.fetchedAt));
-  $('updated').textContent = `${ageHours > 12 ? 'Possibly stale · ' : ''}Fetched ${updated} · Refresh target: 6h`;
+  const warning = feedWarning(data,refreshFailed,now);
+  const updated = new Intl.DateTimeFormat('en-GB',{timeZone:state.timezone,day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}).format(new Date(data.updatedAt));
+  $('updated').textContent = `${warning ? `${warning} · ` : ''}PipAtlas updated ${updated} · Checks every 5 min while visible`;
 }
 for (const key of ['timezone','theme','currency','impact','search','upcoming']) {
   $(key).addEventListener(key === 'search' ? 'input' : 'change',() => {
@@ -85,21 +89,31 @@ $('copy').onclick = async () => {
   catch {$('copy-status').textContent = 'Copy this address:';const input = document.createElement('input');input.value = url.href;input.readOnly = true;$('copy-status').append(input);input.select();}
 };
 async function load() {
+  if (loading) return;
+  loading = true;
+  lastAttempt = Date.now();
   try {
-    const response = await fetch('./data/calendar.json',{cache:'no-cache'});
-    if (!response.ok) throw new Error(`HTTP ${response.status}`);
-    const payload = await response.json();
-    if (!Array.isArray(payload.events) || !Number.isFinite(Date.parse(payload.fetchedAt)) || payload.events.some(e => !Number.isFinite(Date.parse(e.date)) || ['title','country','impact','forecast','previous'].some(k => typeof e[k] !== 'string'))) throw new Error('Invalid calendar data');
-    data = payload;
+    data = await fetchCalendar();
+    refreshFailed = false;
     const currencies = [...new Set(data.events.map(e=>e.country))].filter(c=>c !== 'All').sort();
     $('currency').replaceChildren(new Option('All currencies','all'),...currencies.map(c=>new Option(c,c)));
     if (!currencies.includes(state.currency)) state.currency = 'all';
     render();
   } catch (error) {
-    if (data) {$('updated').textContent = 'Refresh failed · showing previously loaded data';return;}
+    refreshFailed = true;
+    if (data) {render();return;}
     $('count').textContent = 'Calendar unavailable';$('updated').textContent = 'Could not load calendar data';$('empty').hidden = false;
-    $('empty').textContent = 'Calendar data could not be loaded. Reload to retry, or open Forex Factory below.';
+    $('empty').textContent = 'PipAtlas could not be reached. Reload to retry, or open the source calendar below. Automatic retries run every five minutes while visible.';
     console.error(error);
+  } finally {
+    loading = false;
   }
 }
-render();load();setInterval(load,300000);setInterval(()=>{if(data) render();},60000);
+function refreshIfDue() {
+  if (!document.hidden && Date.now()-lastAttempt >= REFRESH_INTERVAL) load();
+}
+document.addEventListener('visibilitychange',refreshIfDue);
+render();
+if (!document.hidden) load();
+setInterval(refreshIfDue,30000);
+setInterval(()=>{if(data && !document.hidden) render();},60000);

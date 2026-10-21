@@ -1,11 +1,9 @@
-name: Refresh calendar and deploy Pages
+name: Deploy calendar to Pages
 
 on:
   push:
     branches: [main]
   workflow_dispatch:
-  schedule:
-    - cron: '23 */6 * * *'
 
 permissions:
   contents: read
@@ -23,8 +21,6 @@ jobs:
         with:
           node-version: '22'
       - run: npm test
-      - name: Fetch weekly calendar
-        run: npm run refresh
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v4
         with:
