@@ -18,6 +18,12 @@ Theme, time zone, view and default filters can also be configured on the setting
 4. After the workflow succeeds, open the URL shown by the deployment, normally `https://YOUR-USERNAME.github.io/YOUR-REPOSITORY/`.
 5. Choose your widget filters, open Settings, and click **Copy embed link**. In Notion, type `/embed`, paste that URL, and resize the block. A wide block works best for the table.
 
+The workflow publishes **only `public/`**. Do not select “Deploy from a branch”: the HTML entry point is inside `public/`, not at the repository root. No API keys, repository secrets, dependency installation or build output are needed. `package.json` is marked private only to prevent accidental npm publication; it does not control GitHub repository visibility.
+
+Before publishing, run `npm run check`. The same check runs in GitHub Actions: it validates JavaScript syntax, local asset references under a repository subpath, and all automated tests. Pull requests run checks only; pushes to `main` and manual runs deploy after passing. The workflow follows [GitHub's Pages workflow configuration](https://docs.github.com/en/pages/getting-started-with-github-pages/using-custom-workflows-with-github-pages).
+
+After the first deployment, open the HTTPS URL shown in Actions, verify events load and Settings opens, then copy the embed link from that hosted page. A localhost link will not work for other Notion users. If data is unavailable or flagged as stale, the PipAtlas service may be delayed independently of your deployment.
+
 Example settings: `?view=day&currencies=USD,EUR&impacts=High,Low&timezone=Europe%2FWarsaw&theme=dark&showHeader=false&showFooter=false`. Empty selections use `currencies=` or `impacts=`. Old `currency=USD` and `impact=Medium%2B` links are migrated to independent selections. Copy embed link includes current settings, but deliberately not the selected date, so the calendar opens on the current day/week. URL settings override locally saved preferences.
 
 ## Data and refresh
@@ -41,6 +47,7 @@ Requires Node.js 22+ and Python 3. No `npm install` is needed.
 
 ```sh
 npm test
+npm run check
 npm run dev
 ```
 
