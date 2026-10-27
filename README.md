@@ -24,7 +24,11 @@ Before publishing, run `npm run check`. The same check runs in GitHub Actions: i
 
 After the first deployment, open the HTTPS URL shown in Actions, verify events load and Settings opens, then copy the embed link from that hosted page. A localhost link will not work for other Notion users. If data is unavailable or flagged as stale, the PipAtlas service may be delayed independently of your deployment.
 
-Example settings: `?view=day&currencies=USD,EUR&impacts=High,Low&timezone=Europe%2FWarsaw&theme=dark&showHeader=false&showFooter=false`. Empty selections use `currencies=` or `impacts=`. Old `currency=USD` and `impact=Medium%2B` links are migrated to independent selections. Copy embed link includes current settings, but deliberately not the selected date, so the calendar opens on the current day/week. URL settings override locally saved preferences.
+Example settings: `?view=day&currencies=USD,EUR&impacts=High,Low&timezone=Europe%2FWarsaw&theme=dark&showHeader=false&showFooter=false`. Empty selections use `currencies=` or `impacts=`. Old `currency=USD` and `impact=Medium%2B` links are migrated to independent selections. Copy embed link includes current settings, but deliberately not the selected date, so the calendar opens on the current day/week.
+
+Every setting follows this priority: **manual choice → embed URL → previously saved preferences → built-in default**. Changes in Settings, the widget's filters, the Day/Week switch, and Reset filters are saved per field in `calendar-manual-preferences`. Opening a page or refreshing data never creates or overwrites manual choices; unchanged fields still follow the embed URL. Explicit empty selections, blank search text and unchecked switches are remembered too. An existing `calendar-manual-timezone` choice from the earlier fix is carried forward. Date navigation deliberately does not save the selected date.
+
+Manual choices apply to this site's widgets sharing the same browser storage; the widget does not detect your geographical or device time zone. Set the choices you want after deploying this fix to establish manual preferences. If Notion clears, partitions, or blocks browser storage, a static widget cannot recover them from storage: use **Copy embed link** and replace the Notion block's embed URL so the choices are also part of its saved source URL.
 
 ## Data and refresh
 

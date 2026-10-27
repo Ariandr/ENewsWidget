@@ -11,7 +11,7 @@
 <body>
 <main class="settings-page">
   <div class="settings-heading"><h1>Widget settings</h1><a id="back" href="./index.html">Done ↗</a></div>
-  <p class="settings-intro">Choose what appears in your calendar.</p>
+  <p class="settings-intro">Your manual changes take priority over the embed URL.</p>
   <form id="preferences">
     <fieldset class="settings-group"><legend>Layout</legend>
       <label class="setting-row"><span>Title header<small>Calendar name and subtitle</small></span><input type="checkbox" name="showHeader"></label>
@@ -35,7 +35,7 @@
   <div class="settings-buttons"><a id="preview" class="primary-button" href="./index.html">Open calendar</a><button id="copy">Copy embed link</button></div>
   <p id="saved" role="status" class="settings-intro"></p>
   <label id="link-fallback" hidden>Embed URL<input id="embed-url" type="text" readonly></label>
-  <p class="settings-intro">The settings button stays available even when all sections are hidden. Your embed link includes these settings.</p>
+  <p class="settings-intro">Your manual choices are remembered for widgets in this browser. Unchanged settings use the embed defaults. To keep these choices if Notion clears or blocks storage, copy the embed link and replace the Notion block’s embed URL.</p>
 </main>
 </body>
 </html>

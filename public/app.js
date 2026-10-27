@@ -1,6 +1,6 @@
 import {dayKey,addDays,periodDays,filterEvents} from './calendar.js';
 import {fetchCalendar,feedWarning,REFRESH_INTERVAL} from './feed.js';
-import {loadPreferences,savePreferences,preferencesURL,applyTheme,CURRENCIES,IMPACTS} from './preferences.js';
+import {loadPreferences,savePreferences,saveManualPreferences,preferencesURL,applyTheme,CURRENCIES,IMPACTS} from './preferences.js';
 import {mountMultiSelect} from './multiselect.js';
 const $ = id => document.getElementById(id);
 const state = loadPreferences();
@@ -9,8 +9,13 @@ let data;
 let loading = false;
 let refreshFailed = false;
 let lastAttempt = 0;
-const updateCurrencies = mountMultiSelect($('currencies'),{label:'Currencies',options:CURRENCIES,selected:state.currencies,onChange:values=>{state.currencies=values;render();}});
-const updateImpacts = mountMultiSelect($('impacts'),{label:'Impact',options:IMPACTS,selected:state.impacts,onChange:values=>{state.impacts=values;render();}});
+const updateCurrencies = mountMultiSelect($('currencies'),{label:'Currencies',options:CURRENCIES,selected:state.currencies,onChange:values=>changePreferences({currencies:values})});
+const updateImpacts = mountMultiSelect($('impacts'),{label:'Impact',options:IMPACTS,selected:state.impacts,onChange:values=>changePreferences({impacts:values})});
+function changePreferences(changes) {
+  Object.assign(state,changes);
+  saveManualPreferences(changes);
+  render();
+}
 function applyControls() {
   $('search').value = state.search;
   $('upcoming').checked = state.upcoming;
@@ -65,15 +70,14 @@ function render() {
 }
 for (const key of ['search','upcoming']) {
   $(key).addEventListener(key === 'search' ? 'input' : 'change',() => {
-    state[key] = key === 'upcoming' ? $(key).checked : $(key).value;
-    render();
+    changePreferences({[key]:key === 'upcoming' ? $(key).checked : $(key).value});
   });
 }
-document.querySelectorAll('[data-view]').forEach(button => button.addEventListener('click',() => {state.view = button.dataset.view;render();}));
+document.querySelectorAll('[data-view]').forEach(button => button.addEventListener('click',() => changePreferences({view:button.dataset.view})));
 $('prev').onclick = () => {state.anchor = addDays(state.anchor,state.view === 'week' ? -7 : -1);render();};
 $('next').onclick = () => {state.anchor = addDays(state.anchor,state.view === 'week' ? 7 : 1);render();};
 $('today').onclick = () => {state.anchor = dayKey(new Date(),state.timezone);render();};
-$('reset').onclick = () => {Object.assign(state,{currencies:[...CURRENCIES],impacts:[...IMPACTS],search:'',upcoming:false});render();};
+$('reset').onclick = () => changePreferences({currencies:[...CURRENCIES],impacts:[...IMPACTS],search:'',upcoming:false});
 async function load() {
   if (loading) return;
   loading = true;

@@ -2,6 +2,8 @@ export const CURRENCIES = ['USD','EUR','GBP','JPY','CHF','CAD','AUD','NZD','CNY'
 export const IMPACTS = ['High','Medium','Low','Holiday'];
 export const TIMEZONES = ['Europe/Warsaw','UTC','Europe/London','America/New_York','Asia/Tokyo','Australia/Sydney'];
 const KEY = 'calendar-preferences';
+const MANUAL_KEY = 'calendar-manual-preferences';
+const LEGACY_TIMEZONE_KEY = 'calendar-manual-timezone';
 
 export function defaultPreferences() {
   return {view:'week',timezone:'Europe/Warsaw',theme:'auto',currencies:[...CURRENCIES],impacts:[...IMPACTS],search:'',upcoming:false,
@@ -34,14 +36,48 @@ export function parsePreferences(query = '', saved = {}) {
   return state;
 }
 
-export function loadPreferences() {
-  let saved;
-  try { saved = JSON.parse(localStorage.getItem(KEY)); } catch {}
-  return parsePreferences(location.search,saved);
+function readStorage(key,storage) {
+  try { return (storage ?? localStorage).getItem(key); } catch { return null; }
 }
-export function savePreferences(state) {
+function writeStorage(key,value,storage) {
+  try { (storage ?? localStorage).setItem(key,value); return true; } catch { return false; }
+}
+function readJSON(key,storage) {
+  try { return JSON.parse(readStorage(key,storage)); } catch { return null; }
+}
+function manualPreferences(values) {
+  if (!values || typeof values !== 'object' || Array.isArray(values)) return {};
+  const defaults = defaultPreferences(), clean = parsePreferences('',values), manual = {};
+  const choices = {view:['week','day'],timezone:TIMEZONES,theme:['auto','light','dark'],currencies:CURRENCIES,impacts:IMPACTS};
+  for (const key of Object.keys(defaults)) {
+    if (!Object.hasOwn(values,key)) continue;
+    const value = values[key];
+    if (Array.isArray(defaults[key])) {
+      if (!Array.isArray(value) || !value.every(item=>choices[key].includes(item))) continue;
+    } else if (typeof value !== typeof defaults[key] || (choices[key] && !choices[key].includes(value))) continue;
+    manual[key] = clean[key];
+  }
+  return manual;
+}
+function loadManualPreferences(storage) {
+  const manual = manualPreferences(readJSON(MANUAL_KEY,storage));
+  const legacyTimezone = readStorage(LEGACY_TIMEZONE_KEY,storage);
+  if (!Object.hasOwn(manual,'timezone') && TIMEZONES.includes(legacyTimezone)) manual.timezone = legacyTimezone;
+  return manual;
+}
+export function loadPreferences(query = location.search,storage) {
+  const state = parsePreferences(query,readJSON(KEY,storage));
+  return {...state,...loadManualPreferences(storage)};
+}
+export function savePreferences(state,storage) {
   const clean = parsePreferences('',state);
-  try { localStorage.setItem(KEY,JSON.stringify(clean)); } catch {}
+  return writeStorage(KEY,JSON.stringify(clean),storage);
+}
+export function saveManualPreferences(changes,storage) {
+  const manual = manualPreferences(changes);
+  if (!Object.keys(manual).length) return false;
+  // Save only fields the user changed, so untouched settings still use the embed defaults.
+  return writeStorage(MANUAL_KEY,JSON.stringify({...loadManualPreferences(storage),...manual}),storage);
 }
 export function preferencesURL(path,state,base = location.href) {
   const url = new URL(path,base);
